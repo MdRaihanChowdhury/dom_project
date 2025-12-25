@@ -8,13 +8,18 @@ const modalCloseBtn = document.getElementById('modalCloseBtn');
 const scrollTopBtn = document.getElementById('scrollTopBtn');
 
 
+// ================= EVENT LISTENERS ================= //
 loadInitialRecipes();
 
 searchBtn.addEventListener('click', performSearch);
 searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
+    if (e.key === 'Enter') {
+        performSearch();
+    }
 });
 
+
+//Modal close
 modalCloseBtn.addEventListener('click', () => {
     modal.style.display = 'none';
 });
@@ -23,7 +28,8 @@ window.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
 });
 
-// Show button when scrolling down
+
+//Scroll to top button
 window.addEventListener('scroll', () => {
     if (document.documentElement.scrollTop > 300) {
         scrollTopBtn.style.display = 'block';
@@ -32,7 +38,7 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Scroll to top when button clicked
+//Scroll to top action
 scrollTopBtn.addEventListener('click', () => {
     window.scrollTo({
         top: 0,
@@ -41,46 +47,70 @@ scrollTopBtn.addEventListener('click', () => {
 });
 
 
+// ================= FUNCTIONS ================= //
 
+//Homepage recipes
 async function loadInitialRecipes() {
     showLoading();
     const res = await fetch('https://www.themealdb.com/api/json/v1/1/search.php?s=chicken');
     const data = await res.json();
-    if (data.meals) displayRecipes(data.meals);
-    else showError('No recipes found.');
+    if (data.meals) {
+        displayRecipes(data.meals);
+    } else {
+        showError('No recipes found.');
+    }
 }
 
+
+//Search logic
 async function performSearch() {
     const query = searchInput.value.trim();
-    if (!query) {
-        alert('Please enter a recipe name to search');
+
+    if (query === "") {
+        loadInitialRecipes();
         return;
     }
 
     showLoading();
     const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`);
     const data = await res.json();
-    if (data.meals) displayRecipes(data.meals);
-    else showError(`No recipes found for "${query}".`);
+
+    if (data.meals) {
+        displayRecipes(data.meals);
+    } else {
+        showError(`No recipes found for "${query}".`);
+    }
 }
 
+
+// Render recipe cards
 function displayRecipes(recipes) {
     hideLoading();
     recipeGrid.innerHTML = '';
+
     recipes.forEach(recipe => {
         const card = document.createElement('div');
         card.className = 'recipe-card';
+
         card.innerHTML = `
             <img src="${recipe.strMealThumb}" class="recipe-image">
             <div class="recipe-content">
                 <h3 class="recipe-title">${recipe.strMeal}</h3>
-                <p class="recipe-description">${recipe.strInstructions.substring(0, 100)}...</p>
-                <button class="view-details-btn" onclick="showRecipeDetails('${recipe.idMeal}')">View Details</button>
-            </div>`;
+                <p class="recipe-description">
+                    ${recipe.strInstructions.substring(0, 100)}...
+                </p>
+                <button class="view-details-btn" onclick="showRecipeDetails('${recipe.idMeal}')">
+                    View Details
+                </button>
+            </div>
+        `;
+
         recipeGrid.appendChild(card);
     });
 }
 
+
+// Modal details
 async function showRecipeDetails(id) {
     const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
     const data = await res.json();
@@ -116,6 +146,8 @@ async function showRecipeDetails(id) {
     modal.style.display = 'block';
 }
 
+
+// UI helpers
 function showLoading() {
     recipeGrid.innerHTML = '';
     loadingSpinner.style.display = 'block';
@@ -133,4 +165,6 @@ function showError(message) {
     errorMessage.style.display = 'block';
 }
 
+
+//expose function
 window.showRecipeDetails = showRecipeDetails;
